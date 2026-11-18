@@ -13,6 +13,7 @@ test("categories, Chinese aliases, IP and keyword search", () => {
   assert.equal(mentionSearch("").categories.length, 9);
   assert.equal(mentionSearch("漏").categories[0].kind, "finding");
   assert.equal(mentionSearch("漏洞").kind, "finding");
+  assert.equal(mentionSearch("Finding").kind, "finding");
   assert.equal(mentionSearch("漏洞SQL注入").query, "SQL注入");
   assert.equal(mentionSearch("ip 192.0.2.1").kind, "ip");
   assert.equal(mentionSearch("接口 GET /api").query, "GET /api");
@@ -25,7 +26,7 @@ test("tokens roundtrip labels and removing one reference preserves its neighbors
   const value = `分析 ${first} 和 ${second}`;
   const selected = selectedMentions(value);
   assert.equal(selected.length, 2);
-  assert.equal(selected[0].label, "漏洞 #12 · 标题（1） 描述");
+  assert.equal(selected[0].label, "Finding #12 · 标题（1） 描述");
   const next = value.slice(0, selected[0].start) + value.slice(selected[0].start + selected[0].token.length);
   assert.equal(selectedMentions(next)[0].token, second);
 });

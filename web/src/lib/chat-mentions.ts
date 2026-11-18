@@ -1,13 +1,13 @@
 export const mentionKinds = [
-  { kind: "finding", label: "漏洞", alias: "finding" },
-  { kind: "asset", label: "资产", alias: "asset" },
-  { kind: "company", label: "企业", alias: "company" },
-  { kind: "endpoint", label: "接口", alias: "api" },
-  { kind: "ip", label: "IP", alias: "ip" },
-  { kind: "app", label: "应用", alias: "app" },
-  { kind: "root_domain", label: "域名", alias: "domain" },
-  { kind: "subdomain", label: "子域名", alias: "subdomain" },
-  { kind: "service", label: "服务", alias: "service" },
+  { kind: "finding", label: "Finding", tokenLabel: "漏洞", alias: "finding" },
+  { kind: "asset", label: "Asset", tokenLabel: "资产", alias: "asset" },
+  { kind: "company", label: "Company", tokenLabel: "企业", alias: "company" },
+  { kind: "endpoint", label: "Endpoint", tokenLabel: "接口", alias: "api" },
+  { kind: "ip", label: "IP", tokenLabel: "IP", alias: "ip" },
+  { kind: "app", label: "App", tokenLabel: "应用", alias: "app" },
+  { kind: "root_domain", label: "Domain", tokenLabel: "域名", alias: "domain" },
+  { kind: "subdomain", label: "Subdomain", tokenLabel: "子域名", alias: "subdomain" },
+  { kind: "service", label: "Service", tokenLabel: "服务", alias: "service" },
 ] as const;
 
 export type MentionKind = (typeof mentionKinds)[number]["kind"];
@@ -30,20 +30,25 @@ export function activeMention(value: string, caret: number) {
 export function mentionSearch(query: string) {
   const text = query.trimStart().toLowerCase();
   for (const item of mentionKinds) {
-    for (const alias of [item.label.toLowerCase(), item.alias]) {
+    // tokenLabel is kept so the Chinese reference aliases still work; label is
+    // the natural-language name shown to the user, and alias is the keyword.
+    for (const alias of [item.label.toLowerCase(), item.tokenLabel, item.alias]) {
       if (text === alias || text.startsWith(`${alias} `) || (/[^a-z]/.test(alias) && text.startsWith(alias))) {
         return { kind: item.kind, query: query.trimStart().slice(alias.length).trim(), categories: [] };
       }
     }
   }
   const categories = mentionKinds.filter(
-    (item) => item.label.toLowerCase().startsWith(text) || item.alias.startsWith(text),
+    (item) =>
+      item.label.toLowerCase().startsWith(text) || item.tokenLabel.startsWith(text) || item.alias.startsWith(text),
   );
   return { kind: "" as const, query: query.trim(), categories };
 }
 
 export function mentionToken(item: ChatMention) {
-  const kind = mentionKinds.find((entry) => entry.kind === item.kind)?.label ?? "资产";
+  // The token label must stay the Chinese protocol keyword: the backend parses
+  // references such as @[漏洞#12 …] and would not recognize an English label.
+  const kind = mentionKinds.find((entry) => entry.kind === item.kind)?.tokenLabel ?? "资产";
   const label = item.label
     .replace(/[[\]]/g, (char) => (char === "[" ? "（" : "）"))
     .replace(/\s+/g, " ")
@@ -52,10 +57,11 @@ export function mentionToken(item: ChatMention) {
 }
 
 export function selectedMentions(value: string) {
+  const displayLabels = new Map<string, string>(mentionKinds.map((item) => [item.tokenLabel, item.label]));
   return [...value.matchAll(/@\[(漏洞|资产|企业|接口|IP|应用|域名|子域名|服务)#([0-9]+)(?: ([^\]\r\n]*))?\]/g)].map(
     (match) => ({
       token: match[0],
-      label: `${match[1]} #${match[2]}${match[3] ? ` · ${match[3]}` : ""}`,
+      label: `${displayLabels.get(match[1]) ?? match[1]} #${match[2]}${match[3] ? ` · ${match[3]}` : ""}`,
       start: match.index,
     }),
   );

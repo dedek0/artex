@@ -10,7 +10,7 @@ import (
 )
 
 func workerTailFor(runDir string, intent *db.Node) string {
-	return workerArtifactSpec(runDir) + renderIntentTask(intent) + "\n\n开始执行上面这条意图：只做它、只产生事实、assets、finding、做完即停。"
+	return workerArtifactSpec(runDir) + renderIntentTask(intent) + "\n\nBegin executing the intent above: do only it, produce only facts/assets/findings, stop when done."
 }
 
 func TestWorkerSystemHasNoPerIntentData(t *testing.T) {
@@ -61,7 +61,7 @@ func TestWorkerSystemPrefixStableAcrossIntents(t *testing.T) {
 			t.Fatalf("per-intent data leaked into static prefix: %q", seg)
 		}
 	}
-	if !strings.Contains(s1[2], "/data/tasks/1/i11") || !strings.Contains(s1[2], "probe login") || !strings.Contains(s1[2], "意图 id: 11") {
+	if !strings.Contains(s1[2], "/data/tasks/1/i11") || !strings.Contains(s1[2], "probe login") || !strings.Contains(s1[2], "Intent id: 11") {
 		t.Fatalf("intent tail missing per-intent content: %q", s1[2])
 	}
 }

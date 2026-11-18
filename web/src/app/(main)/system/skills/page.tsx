@@ -47,7 +47,7 @@ import type { Agent, SkillItem, MCPServer, SkillCall, MissingSkill } from "@/lib
 
 function fmtTime(ts?: string) {
   if (!ts) return "Never called";
-  return new Date(ts).toLocaleString("zh-CN", {
+  return new Date(ts).toLocaleString("en-US", {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
@@ -367,7 +367,7 @@ export default function SkillsPage() {
     } catch (e) {
       const msg = (e as Error).message;
       // offer overwrite when the skill already exists
-      if (!overwrite && msg.includes("已存在")) {
+      if (!overwrite && msg.includes("already exists")) {
         if (window.confirm(`${msg}\n\nOverwrite the skill with the same name?`)) {
           await uploadZip(file, true);
           return;
